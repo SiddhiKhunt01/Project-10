@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card custom-card">
+                    <div class="card-body">
+                        <form id="to-do-form">
+                            <h1 style="text-align: center;">To-Do List</h1>
+                            <div class="to-do-task">
+                                <label style="font-style: bold;">Task:</label>
+                                <input id="taskInput" class="form-control" style="width: 100%; height: 30px;" />
+                                <p id="error"></p>
+                            </div>
+                            <button type="submit" class="btn">ADD</button>
+                            <button type="button" class="btn" onclick="clearAll()">Clear ALL</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="taskDetails"></div>
+    </div>
+
+    <script>
+        let arr = JSON.parse(localStorage.getItem("task")) || [];
+
+        function renderTasks() {
+            const taskDetails = document.getElementById("taskDetails");
+            taskDetails.innerHTML = "";
+
+            arr.forEach((val, index) => {
+                const card = document.createElement("div");
+                card.className = "col-lg-4";
+                card.innerHTML = `
+                    <div class="card custom-card">
+                        <div class="card-body">
+                            <p class="card-text">Task: ${val.taskname}</p>
+                            <button class="btn btn-primary" onclick="viewdata(${index})">Update</button>
+                            <button class="btn btn-danger" onclick="deleteTask(${index})">Delete</button>
+                        </div>
+                    </div>
+                `;
+                taskDetails.appendChild(card);
+            });
+        }
+
+        function addTask(taskname) {
+            arr.push({ taskname });
+            localStorage.setItem("task", JSON.stringify(arr));
+            renderTasks();
+            location.reload();
+        }
+
+        function clearAll() {
+            localStorage.removeItem("task");
+            arr = [];
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            arr.splice(index, 1);
+            localStorage.setItem("task", JSON.stringify(arr));
+            renderTasks();
+        }
+
+        function viewdata(index) {
+            const data = arr[index];
+            const modalId = `exampleModal${index}`;
+            const closeButtonId = `closeButton${index}`;
+
+            const editdata = document.createElement("div");
+            editdata.innerHTML = `
+                <div class="modal fade" id="${modalId}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" style="background-color:aliceblue; padding-top:4px; width:40%;">
+                        <div class="modal-content">
+                            <div class="modal-header"> 
+                                <h5 class="modal-title" style="color: black; font-size:20px;">UPDATE HERE</h5>
+                            </div>
+                            <div class="modal-body">
+                                <form id="updateForm">
+                                    <div class="form-group">
+                                        <label for="updatename">Task-Name:</label>
+                                        <input type="text" class="form-control" id="updatename" style="width:50%;value="${data.taskname}">
+                                    </div>
+                                </form>
+                            </div>  
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary"style="padding:4px;" onclick="updatetask(${index})">Save changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(editdata);
+            $(`#${modalId}`).modal('show');
+            document.getElementById(closeButtonId).addEventListener('click', function () {
+                $(`#${modalId}`).modal('hide');
+            });
+        }
+
+        function updatetask(index) {
+            const updatename = document.getElementById("updatename").value;
+
+            arr[index].taskname = updatename;
+            localStorage.setItem("task", JSON.stringify(arr));
+            renderTasks();
+            
+            if(updatename === ""){
+                alert("Update the task please!")
+            }else{
+                alert("Task updated successfully!");
+            }
+        }
+
+        document.getElementById("to-do-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const taskInput = document.getElementById("taskInput");
+            const taskName = taskInput.value.trim();
+            if (taskName !== "") {
+                addTask(taskName);
+                taskInput.value = "";
+            } else {
+                document.getElementById("error").innerHTML = "Please enter the task.";
+            }
+        });
+
+        renderTasks();
+    </script>
+</body>
+</html>
